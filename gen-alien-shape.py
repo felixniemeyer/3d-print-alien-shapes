@@ -169,7 +169,7 @@ def main(outdir):
     
     # either sine or noise distortion
     # distorted_sdf = noise_distort(noised_sdf, 5, 8, (0,0,3), 0.4, 3)
-    distorted_sdf = sine_distort(noised_sdf, 10, 0.5, 5, 6)
+    distorted_sdf = sine_distort(noised_sdf, 10, 0.3335, 6)
 
     # Add twist transformation before the noise distortion
     random_angle = (np.random.rand() + 1 * np.pi) / 6
