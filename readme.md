@@ -15,12 +15,8 @@ source venv/bin/activate
 pip install -r requirements
 ```
 
-## create output dir
-```
-mkdir results-twisted
-```
-
 ## run
 ```
-python gen-alien-shape.py
+python gen-alien-shape.py [-o output-folder]
 ```
+Optionally with `-o` to specify output folder. 

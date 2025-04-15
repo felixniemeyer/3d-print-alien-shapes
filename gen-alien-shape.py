@@ -2,6 +2,8 @@ import numpy as np
 from sdf.d3 import sdf3, slab, intersection
 from sdf.stl import write_binary_stl  # Import for direct STL writing
 
+import argparse
+
 import os
 
 from scipy.ndimage import zoom
@@ -161,7 +163,7 @@ def twist(base, angle_per_z=np.pi/6):  # default to 30 degrees per unit z
     return f
 
 # Generate and save the mesh
-def main():
+def main(outdir):
     base_sdf = cut_ellipsoid()
     noised_sdf = noisy_ellipsoid(base_sdf, 4, 7, (0,0,3), 0.5, 0.3)
     
@@ -181,7 +183,7 @@ def main():
     )
     
     postfix = ''
-    outfile = lambda: f'results-twisted/noisy_ellipsoid{postfix}.stl'
+    outfile = lambda: f'{outdir}/noisy_ellipsoid{postfix}.stl'
     i = 1 
     while os.path.exists(outfile()):
         i += 1
@@ -194,4 +196,9 @@ def main():
     print(f"STL file saved as '{outfile}'")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--outdir', '-o', type=str, default='results')
+    args = parser.parse_args()
+    #mkdir if not exists
+    os.makedirs(args.outdir, exist_ok=True)
+    main(args.outdir)
