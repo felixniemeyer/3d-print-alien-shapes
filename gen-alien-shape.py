@@ -25,8 +25,7 @@ def ellipsoid_sdf():
 
 # Cut away z < 0
 @sdf3
-def cut_ellipsoid():
-    base = ellipsoid_sdf()
+def cut_ellipsoid(base):
     def f(p):
         z = p[:, 2]
         # Use slab to keep only z >= 0
@@ -40,13 +39,13 @@ def generate_noise(p, freq, amp):
     noise = np.sin((p[:, 0] + random_offset) * freq) * np.sin((p[:, 1] + random_offset) * freq) * np.sin((p[:, 2] + random_offset) * freq)
     return (amp * noise).reshape(-1, 1)  # Ensure it returns a 2D array with shape (n, 1)
 
-def gen_noise_cube(octaves = 4, amp_factor = 0.5):
-    amp = 1
+def gen_noise_cube(octaves = 4, amp_factor = 0.5, amplitude = 1):
+    amp = amplitude
     res = 1
     noise = np.zeros((res,res,res))
     for i in range(octaves):
-        res *= 2
         amp *= amp_factor
+        res *= 2
         noise = zoom(noise, 2, order=2)
         noise += (np.random.rand(res, res, res) * 2 - 1) * amp
         print(f"Upsampled noise to {res}x{res}x{res}: {noise.min()} {noise.max()}")
@@ -164,26 +163,29 @@ def twist(base, angle_per_z=np.pi/6):  # default to 30 degrees per unit z
 
 # Generate and save the mesh
 def main(outdir):
-    base_sdf = cut_ellipsoid()
-    noised_sdf = noisy_ellipsoid(base_sdf, 4, 7, (0,0,3), 0.5, 0.3)
-    
-    # either sine or noise distortion
-    # distorted_sdf = noise_distort(noised_sdf, 5, 8, (0,0,3), 0.4, 3)
-    distorted_sdf = sine_distort(noised_sdf, 10, 0.3335, 6)
+    base_sdf = ellipsoid_sdf()
+    noised_sdf = noisy_ellipsoid(base_sdf, 4, 7, (0,0,3), 0.75)
 
     # Add twist transformation before the noise distortion
     random_angle = (np.random.rand() + 1 * np.pi) / 6
-    twisted_sdf = twist(distorted_sdf, angle_per_z=random_angle)  # 45 degrees per unit z
+    twisted_sdf = twist(noised_sdf, angle_per_z=random_angle)  # 45 degrees per unit z
+
+    # cut_sdf = cut_ellipsoid(twisted_sdf)
+
+    # either sine or noise distortion
+    # distorted_sdf = noise_distort(noised_sdf, 5, 8, (0,0,3), 0.4, 3)
+    # distorted_sdf = sine_distort(noised_sdf, 10, 0.3335, 6)
     
     # High resolution for detail and smoothness
     points = twisted_sdf.generate(
         samples=2**24,  # Lots of samples for a detailed mesh
         step=0.01,     # Small step size for smoothness
-        verbose=True   # Print progress
+        verbose=True,   # Print progress
+        bounds=((-3, -3, 0), (3, 3, 13))
     )
     
     postfix = ''
-    outfile = lambda: f'{outdir}/noisy_ellipsoid{postfix}.stl'
+    outfile = lambda: f'{outdir}/alien{postfix}.stl'
     i = 1 
     while os.path.exists(outfile()):
         i += 1
